@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | plusvibeee</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0f;
+    color: #7ec850;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px,
+      transparent 1px, transparent 3px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .panel {
+    width: 92%;
+    max-width: 560px;
+    background: rgba(10,6,2,0.97);
+    border: 4px solid #7ec850;
+    box-shadow: inset 0 0 0 2px #4a7a28, 0 0 0 2px #000, 8px 8px 0 #000, 0 0 60px rgba(126,200,80,0.15);
+    padding: 32px 28px 36px;
+    animation: cardIn 0.5s cubic-bezier(.23,1.2,.67,1) both;
+  }
+  @keyframes cardIn {
+    from { transform: scale(0.8) translateY(30px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .panel-title {
+    font-size: 11px;
+    color: #ffd700;
+    text-shadow: 2px 2px 0 #000, 0 0 20px rgba(255,215,0,0.4);
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .panel-sub {
+    font-size: 6px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 28px;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .divider {
+    height: 3px;
+    background: repeating-linear-gradient(90deg, #7ec850 0px, #7ec850 8px, #4a7a28 8px, #4a7a28 16px);
+    margin-bottom: 24px;
+    box-shadow: 0 2px 0 #000;
+  }
+
+  /* Login */
+  #loginScreen { display: block; }
+  #adminScreen  { display: none; }
+
+  .field-label {
+    font-size: 7px;
+    color: #999;
+    text-shadow: 1px 1px 0 #000;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .field-input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    width: 100%;
+    background: #111;
+    border: 3px solid #333;
+    box-shadow: inset 2px 2px 0 #000;
+    color: #7ec850;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 18px;
+    transition: border-color 0.15s;
+  }
+  .field-input:focus { border-color: #7ec850; }
+
+  .login-btn {
+    font-family: 'Press Start 2P', monospace;
+    width: 100%;
+    font-size: 10px;
+    padding: 16px;
+    background: linear-gradient(180deg, #8bc34a 0%, #558b2f 100%);
+    color: #fff;
+    border: 3px solid #aed581;
+    box-shadow: 0 5px 0 #1a3a07, 3px 3px 0 #000;
+    cursor: pointer;
+    text-shadow: 2px 2px 0 #1b5e20;
+    transition: filter 0.1s, transform 0.1s;
+    margin-top: 4px;
+  }
+  .login-btn:hover  { filter: brightness(1.15); }
+  .login-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #1a3a07; }
+
+  .login-error {
+    font-size: 7px;
+    color: #ef5350;
+    text-align: center;
+    text-shadow: 1px 1px 0 #000;
+    margin-top: 14px;
+    min-height: 16px;
+  }
+
+  /* Admin screen */
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .admin-welcome { font-size: 8px; color: #ffd700; text-shadow: 1px 1px 0 #000; }
+  .logout-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    background: #1a1a1a;
+    color: #666;
+    border: 2px solid #333;
+    box-shadow: 2px 2px 0 #000;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .logout-btn:hover { color: #ef5350; border-color: #ef5350; }
+
+  /* Live counter */
+  .live-box {
+    background: rgba(0,0,0,0.5);
+    border: 3px solid #4a7a28;
+    box-shadow: 3px 3px 0 #000;
+    padding: 16px;
+    margin-bottom: 22px;
+  }
+  .live-title {
+    font-size: 7px;
+    color: #999;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    background: #7ec850;
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+  .live-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .live-label { font-size: 7px; width: 36px; flex-shrink: 0; }
+  .live-label.yes { color: #7ec850; }
+  .live-label.no  { color: #ef5350; }
+  .live-bar-track {
+    flex: 1;
+    height: 14px;
+    background: #1a1a1a;
+    border: 2px solid #222;
+    overflow: hidden;
+  }
+  .live-bar-fill { height: 100%; transition: width 0.5s ease; }
+  .live-bar-fill.yes { background: linear-gradient(90deg, #558b2f, #8bc34a); }
+  .live-bar-fill.no  { background: linear-gradient(90deg, #b71c1c, #ef5350); }
+  .live-count { font-size: 7px; color: #fff; width: 54px; text-align: right; flex-shrink: 0; }
+  .live-total { font-size: 6px; color: #555; text-align: right; margin-top: 8px; }
+
+  /* Action blocks */
+  .action-title {
+    font-size: 7px;
+    color: #999;
+    margin-bottom: 14px;
+    text-shadow: 1px 1px 0 #000;
+    letter-spacing: 0.5px;
+  }
+
+  /* Reset block */
+  .action-box {
+    background: rgba(0,0,0,0.4);
+    border: 3px solid #333;
+    box-shadow: 3px 3px 0 #000;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .reset-btn {
+    font-family: 'Press Start 2P', monospace;
+    width: 100%;
+    font-size: 8px;
+    padding: 14px;
+    background: linear-gradient(180deg, #c62828 0%, #8b1a1a 100%);
+    color: #fff;
+    border: 3px solid #ef5350;
+    box-shadow: 0 4px 0 #4a0000, 3px 3px 0 #000;
+    cursor: pointer;
+    text-shadow: 1px 1px 0 #000;
+    transition: filter 0.1s, transform 0.1s;
+  }
+  .reset-btn:hover  { filter: brightness(1.2); }
+  .reset-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4a0000; }
+
+  /* Set custom block */
+  .custom-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .custom-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .custom-label {
+    font-size: 6px;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .custom-label.yes { color: #7ec850; }
+  .custom-label.no  { color: #ef5350; }
+  .custom-input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    background: #111;
+    border: 3px solid #333;
+    box-shadow: inset 2px 2px 0 #000;
+    color: #fff;
+    padding: 10px 12px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  .custom-input:focus { border-color: #7ec850; }
+  .custom-input.no-input:focus { border-color: #ef5350; }
+
+  .set-btn {
+    font-family: 'Press Start 2P', monospace;
+    width: 100%;
+    font-size: 8px;
+    padding: 13px;
+    background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+    color: #1a1a00;
+    border: 3px solid #ffd700;
+    box-shadow: 0 4px 0 #7a5800, 3px 3px 0 #000;
+    cursor: pointer;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+    transition: filter 0.1s, transform 0.1s;
+  }
+  .set-btn:hover  { filter: brightness(1.1); }
+  .set-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #7a5800; }
+
+  /* Status message */
+  .status-msg {
+    font-size: 7px;
+    text-align: center;
+    min-height: 20px;
+    margin-top: 14px;
+    text-shadow: 1px 1px 0 #000;
+    transition: opacity 0.3s;
+  }
+  .status-msg.ok  { color: #7ec850; }
+  .status-msg.err { color: #ef5350; }
+  .status-msg.loading { color: #ffd700; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="panel-title">⚙ ADMIN PANEL</div>
+  <div class="panel-sub">plusvibeee & plusvibeee_play</div>
+  <div class="divider"></div>
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <label class="field-label">ЛОГИН:</label>
+    <input class="field-input" type="text" id="loginInput" placeholder="username" autocomplete="off">
+    <label class="field-label">ПАРОЛЬ:</label>
+    <input class="field-input" type="password" id="passInput" placeholder="••••••••" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">▶ ВОЙТИ</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="adminScreen">
+    <div class="admin-header">
+      <div class="admin-welcome">👑 prostYUKI_146</div>
+      <button class="logout-btn" onclick="doLogout()">✖ ВЫЙТИ</button>
+    </div>
+
+    <!-- Live votes -->
+    <div class="live-box">
+      <div class="live-title"><div class="live-dot"></div> LIVE — ТЕКУЩИЕ ГОЛОСА</div>
+      <div class="live-row">
+        <span class="live-label yes">ДА</span>
+        <div class="live-bar-track"><div class="live-bar-fill yes" id="barYes" style="width:0%"></div></div>
+        <span class="live-count" id="countYes">—</span>
+      </div>
+      <div class="live-row">
+        <span class="live-label no">НЕТ</span>
+        <div class="live-bar-track"><div class="live-bar-fill no" id="barNo" style="width:0%"></div></div>
+        <span class="live-count" id="countNo">—</span>
+      </div>
+      <div class="live-total" id="liveTotal">Всего голосов: —</div>
+    </div>
+
+    <!-- Reset -->
+    <div class="action-box">
+      <div class="action-title">🗑 СБРОСИТЬ ВСЕ ГОЛОСА:</div>
+      <button class="reset-btn" onclick="confirmReset()">⚠ СБРОСИТЬ В 0</button>
+    </div>
+
+    <!-- Set custom -->
+    <div class="action-box">
+      <div class="action-title">✏ УСТАНОВИТЬ ВРУЧНУЮ:</div>
+      <div class="custom-row">
+        <div class="custom-field">
+          <span class="custom-label yes">ДА:</span>
+          <input class="custom-input" type="number" id="inputYes" min="0" value="0">
+        </div>
+        <div class="custom-field">
+          <span class="custom-label no">НЕТ:</span>
+          <input class="custom-input no-input" type="number" id="inputNo" min="0" value="0">
+        </div>
+      </div>
+      <button class="set-btn" onclick="setCustom()">💾 СОХРАНИТЬ</button>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+</div>
+
+<script>
+  const BIN_ID  = '69b29088aa77b81da9dacfb9';
+  const API_KEY = '$2a$10$.uWe3soFqzArgcwf80jzv.J4k/l3pJVTs.Ifyyg2lbnuItjUUTixa';
+  const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+  const ADMIN_LOGIN = 'prostYUKI_146';
+  const ADMIN_PASS  = 'pro228pro';
+
+  /* ===== LOGIN ===== */
+  // Enter key on password field
+  document.getElementById('passInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  function doLogin() {
+    const login = document.getElementById('loginInput').value.trim();
+    const pass  = document.getElementById('passInput').value;
+    if (login === ADMIN_LOGIN && pass === ADMIN_PASS) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminScreen').style.display = 'block';
+      loadVotes();
+      // Auto-refresh every 10s
+      setInterval(loadVotes, 10000);
+    } else {
+      const err = document.getElementById('loginError');
+      err.textContent = '⛔ Неверный логин или пароль';
+      document.getElementById('passInput').value = '';
+      setTimeout(() => err.textContent = '', 2500);
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('loginScreen').style.display = 'block';
+    document.getElementById('adminScreen').style.display = 'none';
+    document.getElementById('passInput').value = '';
+    document.getElementById('loginInput').value = '';
+  }
+
+  /* ===== FETCH VOTES ===== */
+  async function loadVotes() {
+    try {
+      const r = await fetch(BIN_URL + '/latest', { headers: { 'X-Master-Key': API_KEY } });
+      const d = await r.json();
+      updateDisplay(d.record);
+    } catch(e) {
+      showStatus('Ошибка загрузки данных', 'err');
+    }
+  }
+
+  function updateDisplay(data) {
+    const yes = data.yes || 0;
+    const no  = data.no  || 0;
+    const total = yes + no || 1;
+    const yp = yes + no > 0 ? Math.round(yes / total * 100) : 0;
+    const np = 100 - yp;
+
+    document.getElementById('barYes').style.width  = yp + '%';
+    document.getElementById('barNo').style.width   = np + '%';
+    document.getElementById('countYes').textContent = `${yes} (${yp}%)`;
+    document.getElementById('countNo').textContent  = `${no} (${np}%)`;
+    document.getElementById('liveTotal').textContent = `Всего голосов: ${yes + no}`;
+
+    // Prefill custom inputs
+    document.getElementById('inputYes').value = yes;
+    document.getElementById('inputNo').value  = no;
+  }
+
+  /* ===== SAVE TO BIN ===== */
+  async function saveToBin(yes, no) {
+    const r = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY,
+        'X-Bin-Versioning': 'false'
+      },
+      body: JSON.stringify({ yes, no })
+    });
+    if (!r.ok) throw new Error('Save failed');
+    return { yes, no };
+  }
+
+  /* ===== RESET ===== */
+  function confirmReset() {
+    if (!confirm('Сбросить ВСЕ голоса в 0? Это нельзя отменить!')) return;
+    doReset();
+  }
+
+  async function doReset() {
+    showStatus('⏳ Сбрасываю...', 'loading');
+    try {
+      await saveToBin(0, 0);
+      updateDisplay({ yes: 0, no: 0 });
+      showStatus('✔ Голоса сброшены в 0!', 'ok');
+    } catch(e) {
+      showStatus('⛔ Ошибка при сбросе', 'err');
+    }
+  }
+
+  /* ===== SET CUSTOM ===== */
+  async function setCustom() {
+    const yes = parseInt(document.getElementById('inputYes').value) || 0;
+    const no  = parseInt(document.getElementById('inputNo').value)  || 0;
+    if (yes < 0 || no < 0) { showStatus('⛔ Числа должны быть >= 0', 'err'); return; }
+    showStatus('⏳ Сохраняю...', 'loading');
+    try {
+      await saveToBin(yes, no);
+      updateDisplay({ yes, no });
+      showStatus(`✔ Сохранено: ДА=${yes}, НЕТ=${no}`, 'ok');
+    } catch(e) {
+      showStatus('⛔ Ошибка при сохранении', 'err');
+    }
+  }
+
+  /* ===== STATUS ===== */
+  let statusTimer = null;
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.textContent = msg;
+    el.className = 'status-msg ' + type;
+    if (statusTimer) clearTimeout(statusTimer);
+    if (type !== 'loading') {
+      statusTimer = setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 3000);
+    }
+  }
+</script>
+</body>
+</html>
