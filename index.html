@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голосование | plusvibeee</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #1a1a2e;
+  }
+
+  .bg {
+    position: fixed;
+    inset: 0;
+    background: url('background.jpg') center center / cover no-repeat;
+    z-index: 0;
+    filter: brightness(0.5) saturate(0.8);
+  }
+  .bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px,
+      transparent 1px, transparent 3px
+    );
+  }
+
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+  .particle {
+    position: absolute;
+    background: #7ec850;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.7; }
+    100% { transform: translateY(-120px) rotate(720deg); opacity: 0; }
+  }
+
+  .card {
+    position: relative;
+    z-index: 10;
+    max-width: 860px;
+    width: 92%;
+    padding: 34px 30px 38px;
+    background: rgba(14, 9, 3, 0.93);
+    border: 4px solid #7ec850;
+    box-shadow:
+      inset 0 0 0 2px #4a7a28,
+      0 0 0 2px #000,
+      8px 8px 0 0 #000,
+      0 0 50px rgba(126,200,80,0.2);
+    animation: cardIn 0.6s cubic-bezier(.23,1.2,.67,1) both;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+  @keyframes cardIn {
+    from { transform: scale(0.75) translateY(40px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .badge {
+    display: inline-block;
+    background: #7ec850;
+    color: #0a1a00;
+    font-size: 7px;
+    padding: 4px 10px;
+    margin-bottom: 18px;
+    border: 2px solid #4a7a28;
+    box-shadow: 2px 2px 0 #000;
+    text-transform: uppercase;
+    animation: blink 2s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.6; } }
+
+  .question {
+    color: #fff;
+    font-size: clamp(10px, 1.7vw, 14px);
+    line-height: 2.2;
+    text-shadow: 2px 2px 0 #000, 0 0 20px rgba(126,200,80,0.25);
+    margin-bottom: 22px;
+  }
+  .question em {
+    color: #ffd700;
+    font-style: normal;
+    text-shadow: 2px 2px 0 #000, 0 0 12px rgba(255,215,0,0.4);
+  }
+
+  .divider {
+    height: 4px;
+    background: repeating-linear-gradient(
+      90deg, #7ec850 0px, #7ec850 8px, #4a7a28 8px, #4a7a28 16px
+    );
+    margin-bottom: 24px;
+    box-shadow: 0 2px 0 #000;
+  }
+
+  .voters-label {
+    font-size: 8px;
+    color: #999;
+    text-shadow: 1px 1px 0 #000;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+  .voters {
+    display: flex;
+    gap: 18px;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .voter { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .voter img {
+    width: 54px; height: 54px; object-fit: cover;
+    border: 3px solid #7ec850;
+    box-shadow: 3px 3px 0 #000, inset 0 0 0 1px #4a7a28;
+    filter: saturate(0.85);
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+  }
+  .voter img:hover  { filter: saturate(1.2) brightness(1.1); transform: scale(1.08); }
+  .voter img:active { transform: scale(0.95); }
+  .voter span {
+    font-size: 6px; color: #7ec850; text-shadow: 1px 1px 0 #000;
+    text-align: center; max-width: 64px; word-break: break-word; line-height: 1.7;
+  }
+
+  .buttons {
+    display: flex; gap: 20px; justify-content: center;
+    align-items: flex-end; flex-wrap: wrap; margin-bottom: 18px;
+  }
+
+  .mc-btn {
+    font-family: 'Press Start 2P', monospace;
+    padding: 0; cursor: pointer; border: none; outline: none;
+    position: relative; image-rendering: pixelated; user-select: none; background: transparent;
+  }
+  .mc-btn .btn-top {
+    display: block; text-align: center; letter-spacing: 1.5px; border: 3px solid; position: relative;
+  }
+  .mc-btn .btn-shadow { display: block; border: 3px solid; border-top: none; }
+
+  .btn-yes { width: 240px; }
+  .btn-yes .btn-top {
+    padding: 20px 0 16px; font-size: 20px;
+    background: linear-gradient(180deg, #8bc34a 0%, #6aaa2e 60%, #558b2f 100%);
+    border-color: #aed581 #33691e #33691e #aed581; color: #fff;
+    text-shadow: 2px 2px 0 #1b5e20, -1px -1px 0 #1b5e20;
+    box-shadow: inset 1px 1px 0 rgba(255,255,255,0.3), inset -1px -1px 0 rgba(0,0,0,0.3);
+    transition: filter 0.1s;
+  }
+  .btn-yes .btn-shadow { height: 8px; background: #2d5a0f; border-color: #1a3a07; }
+  .btn-yes:hover .btn-top { filter: brightness(1.18); }
+  .btn-yes:active { transform: translateY(5px); }
+  .btn-yes:active .btn-shadow { height: 3px; }
+  @keyframes explode {
+    0%   { transform: scale(1); opacity: 1; }
+    30%  { transform: scale(1.6) rotate(-4deg); filter: brightness(2.5); }
+    100% { transform: scale(0) rotate(20deg); opacity: 0; }
+  }
+  .btn-yes.exploding { animation: explode 0.55s ease-in forwards; pointer-events: none; }
+
+  .btn-no { width: 130px; opacity: 0.45; }
+  .btn-no .btn-top {
+    padding: 9px 0 7px; font-size: 10px;
+    background: linear-gradient(180deg, #555 0%, #2e2e2e 100%);
+    border-color: #777 #111 #111 #777; color: #888;
+    text-shadow: 1px 1px 0 #000; cursor: not-allowed;
+  }
+  .btn-no .btn-shadow { height: 4px; background: #181818; border-color: #000; }
+
+  .no-tip {
+    font-size: 7px; color: #ff8a80; text-align: center;
+    margin-top: 6px; min-height: 14px; text-shadow: 1px 1px 0 #000;
+    max-width: 130px; line-height: 1.8;
+  }
+
+  /* Voted screen */
+  .voted-screen { text-align: center; padding: 24px 0 10px; }
+  .voted-screen .icon { font-size: 56px; margin-bottom: 18px; }
+  .voted-screen .msg {
+    font-size: clamp(10px, 1.8vw, 13px); color: #ffd700;
+    text-shadow: 2px 2px 0 #000; line-height: 2.4;
+  }
+
+  /* Minigame button */
+  .minigame-btn {
+    font-family: 'Press Start 2P', monospace;
+    display: flex; align-items: center; gap: 12px;
+    margin: 22px auto 0; padding: 12px 20px;
+    background: linear-gradient(180deg, #ffd700 0%, #e6ac00 100%);
+    border: 3px solid #b8860b; box-shadow: 4px 4px 0 #000;
+    color: #1a1a00; font-size: 9px; cursor: pointer;
+    transition: filter 0.1s, transform 0.1s;
+  }
+  .minigame-btn:hover { filter: brightness(1.15); }
+  .minigame-btn:active { transform: translateY(3px); box-shadow: 1px 1px 0 #000; }
+  .minigame-btn img { width: 28px; height: 28px; object-fit: cover; border: 2px solid #b8860b; border-radius: 50%; }
+
+  /* Vote counter */
+  .vote-counter {
+    margin-top: 28px; border: 3px solid #4a7a28;
+    box-shadow: 3px 3px 0 #000; padding: 16px 18px; background: rgba(0,0,0,0.4);
+  }
+  .vote-counter-title { font-size: 7px; color: #999; text-shadow: 1px 1px 0 #000; margin-bottom: 14px; }
+  .vote-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .vote-bar-label { font-size: 7px; width: 36px; flex-shrink: 0; text-shadow: 1px 1px 0 #000; }
+  .vote-bar-label.yes { color: #7ec850; }
+  .vote-bar-label.no  { color: #ef5350; }
+  .vote-bar-track {
+    flex: 1; height: 14px; background: #1a1a1a;
+    border: 2px solid #333; box-shadow: inset 1px 1px 0 #000; overflow: hidden;
+  }
+  .vote-bar-fill { height: 100%; transition: width 0.6s ease; }
+  .vote-bar-fill.yes { background: linear-gradient(90deg, #558b2f, #8bc34a); }
+  .vote-bar-fill.no  { background: linear-gradient(90deg, #b71c1c, #ef5350); }
+  .vote-bar-count { font-size: 7px; color: #fff; text-shadow: 1px 1px 0 #000; width: 62px; flex-shrink: 0; text-align: right; }
+  .counter-loading { font-size: 7px; color: #666; text-align: center; padding: 10px 0; text-shadow: 1px 1px 0 #000; }
+
+  /* Result overlay */
+  .result-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .result-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .result-box {
+    max-width: 500px; width: 100%;
+    background: rgba(14,9,3,0.98); border: 4px solid #7ec850;
+    box-shadow: inset 0 0 0 2px #4a7a28, 0 0 0 2px #000, 8px 8px 0 #000, 0 0 60px rgba(126,200,80,0.3);
+    padding: 28px 24px 24px; text-align: center;
+    animation: popIn 0.45s cubic-bezier(.23,1.4,.67,1) both;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .res-title {
+    font-size: clamp(11px, 2.2vw, 14px); color: #7ec850;
+    text-shadow: 2px 2px 0 #000, 0 0 20px rgba(126,200,80,0.5);
+    line-height: 2.1; margin-bottom: 18px;
+  }
+  .meme-img {
+    width: 100%; max-width: 320px; border: 4px solid #ffd700;
+    box-shadow: 4px 4px 0 #000; display: block; margin: 0 auto 18px;
+  }
+  .res-sub { font-size: 7px; color: #888; text-shadow: 1px 1px 0 #000; line-height: 2; margin-bottom: 18px; }
+  .close-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 9px;
+    background: #7ec850; color: #0a1a00; border: 3px solid #4a7a28;
+    box-shadow: 3px 3px 0 #000; padding: 10px 20px; cursor: pointer; transition: filter 0.1s;
+  }
+  .close-btn:hover { filter: brightness(1.15); }
+
+  /* Explosion particles */
+  .exp-particle {
+    position: fixed; pointer-events: none; z-index: 150;
+    animation: expFly 0.65s ease-out forwards;
+  }
+  @keyframes expFly {
+    0%   { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  /* ===== FLAPPY BIRD OVERLAY ===== */
+  .game-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92); z-index: 300;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  .game-overlay.show { display: flex; }
+
+  .game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 360px; margin-bottom: 10px;
+  }
+  .game-title { font-size: 9px; color: #ffd700; text-shadow: 2px 2px 0 #000; }
+  .game-score-display { font-size: 9px; color: #7ec850; text-shadow: 2px 2px 0 #000; }
+
+  #gameCanvas {
+    border: 4px solid #7ec850;
+    box-shadow: 0 0 0 2px #000, 4px 4px 0 #000, 0 0 30px rgba(126,200,80,0.3);
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  .game-footer {
+    width: 360px; margin-top: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .game-hint { font-size: 6px; color: #666; text-shadow: 1px 1px 0 #000; }
+  .game-close-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    background: #333; color: #999; border: 2px solid #555;
+    box-shadow: 2px 2px 0 #000; padding: 6px 12px; cursor: pointer;
+  }
+  .game-close-btn:hover { background: #444; color: #fff; }
+
+  .game-best { font-size: 6px; color: #ffd700; text-shadow: 1px 1px 0 #000; margin-top: 6px; }
+
+  /* Made in label */
+  .made-in {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: transparent;
+    background: linear-gradient(90deg, #7ec850, #ffd700, #7ec850);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: none;
+    animation: shine 3s linear infinite;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  @keyframes shine {
+    0%   { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* Demo / back button */
+  .demo-btn {
+    font-family: 'Press Start 2P', monospace;
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 20;
+    font-size: 7px;
+    background: rgba(14,9,3,0.92);
+    color: #7ec850;
+    border: 2px solid #4a7a28;
+    box-shadow: 2px 2px 0 #000;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: filter 0.1s, transform 0.1s;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .demo-btn:hover { filter: brightness(1.3); transform: scale(1.05); }
+  .demo-btn:active { transform: scale(0.97); }
+
+  /* Demo confirm popup */
+  .demo-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  .demo-popup.show { display: flex; }
+  .demo-popup-box {
+    background: rgba(14,9,3,0.98);
+    border: 4px solid #ffd700;
+    box-shadow: inset 0 0 0 2px #b8860b, 0 0 0 2px #000, 6px 6px 0 #000;
+    padding: 28px 24px 22px;
+    text-align: center;
+    max-width: 340px;
+    width: 92%;
+    animation: popIn 0.3s cubic-bezier(.23,1.4,.67,1) both;
+  }
+  .demo-popup-title {
+    font-size: 9px; color: #ffd700;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 2.2; margin-bottom: 18px;
+  }
+  .demo-popup-btns { display: flex; gap: 14px; justify-content: center; }
+  .demo-confirm-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    background: #7ec850; color: #0a1a00;
+    border: 3px solid #4a7a28; box-shadow: 3px 3px 0 #000;
+    padding: 10px 16px; cursor: pointer;
+  }
+  .demo-cancel-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    background: #333; color: #999;
+    border: 3px solid #555; box-shadow: 3px 3px 0 #000;
+    padding: 10px 16px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Made in label -->
+<div class="made-in">✦ made in prostYUKI_146 ✦</div>
+
+<!-- Demo / back to menu button -->
+<button class="demo-btn" onclick="openDemoPopup()">← МЕНЮ</button>
+
+<!-- Demo confirm popup -->
+<div class="demo-popup" id="demoPopup">
+  <div class="demo-popup-box">
+    <div class="demo-popup-title">⚠ СБРОСИТЬ ГОЛОС?<br><br>Вернёшься в главное меню<br>и сможешь проголосовать заново</div>
+    <div class="demo-popup-btns">
+      <button class="demo-confirm-btn" onclick="resetVote()">✔ ДА, СБРОС</button>
+      <button class="demo-cancel-btn" onclick="closeDemoPopup()">✘ ОТМЕНА</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="badge">📢 plusvibeee & plusvibeee_play — ОФИЦИАЛЬНОЕ ГОЛОСОВАНИЕ</div>
+  <div class="question">
+    Снять ли <em>lesha_gold_vibeee_pobedil</em> с должности VIP на канале plusvibeee и plusvibeee_play?
+  </div>
+  <div class="divider"></div>
+  <div id="voteArea"></div>
+</div>
+
+<!-- Result overlay -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="res-title">у леши теперь нету випки(</div>
+    <img class="meme-img" src="meme1.jpg" alt="мем">
+    <div class="res-sub">Голоса подсчитаны. Решение вынесено навсегда.<br>plusvibeee & plusvibeee_play</div>
+    <button class="close-btn" onclick="closeOverlay()">✔ Понял, принял</button>
+  </div>
+</div>
+
+<!-- Guess game overlay -->
+<div class="game-overlay" id="guessOverlay">
+  <div style="width:92%;max-width:500px;">
+    <div class="game-header" style="width:100%;margin-bottom:12px;">
+      <div class="game-title">🔍 УГАДАЙ ОРИГИНАЛ</div>
+      <div class="game-score-display">СЧЁТ: <span id="guessScore">0</span></div>
+    </div>
+    <div id="guessBox" style="
+      background:rgba(14,9,3,0.97);
+      border:4px solid #7ec850;
+      box-shadow:inset 0 0 0 2px #4a7a28,0 0 0 2px #000,6px 6px 0 #000;
+      padding:20px 16px 24px;
+      text-align:center;
+    ">
+      <div id="guessQuestion" style="font-size:8px;color:#ffd700;text-shadow:2px 2px 0 #000;line-height:2;margin-bottom:18px;">
+        Выбери оригинальное фото!
+      </div>
+      <div id="guessPics" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;"></div>
+      <div id="guessResult" style="font-size:9px;min-height:22px;text-shadow:2px 2px 0 #000;margin-bottom:14px;"></div>
+      <button id="guessNextBtn" onclick="guessNext()" style="display:none;font-family:'Press Start 2P',monospace;font-size:8px;background:#7ec850;color:#0a1a00;border:3px solid #4a7a28;box-shadow:3px 3px 0 #000;padding:10px 20px;cursor:pointer;">▶ СЛЕДУЮЩИЙ</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;width:100%;">
+      <div style="font-size:6px;color:#ffd700;text-shadow:1px 1px 0 #000;">РЕКОРД: <span id="guessBest">0</span></div>
+      <button class="game-close-btn" onclick="closeGuess()">✖ ВЫЙТИ</button>
+    </div>
+  </div>
+</div>
+<div class="game-overlay" id="gameOverlay">
+  <div class="game-header">
+    <div class="game-title">🎮 FLAPPY lesha</div>
+    <div class="game-score-display">СЧЁТ: <span id="scoreDisplay">0</span></div>
+  </div>
+  <div style="position:relative;display:inline-block;">
+    <canvas id="gameCanvas" width="360" height="480"></canvas>
+    <button id="restartBtn" onclick="doRestart()" style="display:none;position:absolute;left:50%;bottom:90px;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:10px;background:linear-gradient(180deg,#4aaa28 0%,#2d7a0f 100%);color:#fff;border:3px solid #7ec850;box-shadow:0 4px 0 #1a4a07,3px 3px 0 #000;padding:14px 28px;cursor:pointer;text-shadow:1px 1px 0 #000;white-space:nowrap;z-index:10;">▶ ИГРАТЬ ЗАНОВО</button>
+  </div>
+  <div class="game-footer">
+    <div>
+      <div class="game-hint">ПРОБЕЛ / ТАП — прыжок</div>
+      <div class="game-best">РЕКОРД: <span id="bestDisplay">0</span></div>
+    </div>
+    <button class="game-close-btn" onclick="closeGame()">✖ ВЫЙТИ</button>
+  </div>
+</div>
+
+<audio id="audioYes"    src="yes.mp3"       preload="auto"></audio>
+<audio id="audioNo"     src="no.mp3"        preload="auto"></audio>
+<audio id="audioWin"    src="win.mp3"       preload="auto"></audio>
+<audio id="audioSound1" src="sound1.mp3"    preload="auto"></audio>
+<audio id="audioSound2" src="sound2.mp3"    preload="auto"></audio>
+<audio id="audioSound3" src="sound3.mp3"    preload="auto"></audio>
+<audio id="audioJump"   src="jump.mp3"      preload="auto"></audio>
+<audio id="audioDeath"  src="death.mp3"     preload="auto"></audio>
+<audio id="audioLoh" src="ty_loh.mp3" preload="auto"></audio>
+
+<script>
+/* ===== JSONBIN ===== */
+const BIN_ID  = '69b29ca9b7ec241ddc612f4a';
+const API_KEY = '$2a$10$fQunAXiicpQLQBa6Xyc9W.OlheUpiWaN5vS1lzzXSmR.BhYv3rnRi';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+async function fetchVotes() {
+  try {
+    const r = await fetch(BIN_URL + '/latest', {
+      method: 'GET',
+      headers: {
+        'X-Master-Key': API_KEY
+      }
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.record;
+  } catch(e) { return null; }
+}
+
+async function addVote(type) {
+  try {
+    const cur = await fetchVotes();
+    if (!cur) return null;
+    const upd = { yes: cur.yes + (type==='yes'?1:0), no: cur.no + (type==='no'?1:0) };
+    const r = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY,
+        'X-Bin-Versioning': 'false'
+      },
+      body: JSON.stringify(upd)
+    });
+    if (!r.ok) return null;
+    return upd;
+  } catch(e) { return null; }
+}
+
+/* ===== PARTICLES ===== */
+const pContainer = document.getElementById('particles');
+const cols = ['#7ec850','#ffd700','#ef5350','#fff','#4a7a28'];
+for (let i = 0; i < 28; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.cssText = `left:${Math.random()*100}%;animation-duration:${4+Math.random()*8}s;animation-delay:${Math.random()*8}s;background:${cols[Math.floor(Math.random()*cols.length)]};width:${4+Math.floor(Math.random()*3)*2}px;height:${4+Math.floor(Math.random()*3)*2}px;`;
+  pContainer.appendChild(p);
+}
+
+/* ===== SOUND MANAGER ===== */
+let currentAudio = null;
+const GAME_SOUNDS = ['audioJump', 'audioDeath']; // эти звуки вне менеджера
+
+function playSound(id) {
+  if (GAME_SOUNDS.includes(id)) return; // игровые звуки управляются отдельно
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  const a = document.getElementById(id);
+  if (!a) return;
+  a.currentTime = 0;
+  a.play().catch(()=>{});
+  currentAudio = a;
+}
+function stopAllSounds() {
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+}
+
+/* Звуки игры — независимые */
+let _lastJumpTime = 0;
+
+function playJumpSound() {
+  const now = Date.now();
+  if (now - _lastJumpTime < 120) return; // не чаще раза в 120мс
+  _lastJumpTime = now;
+  const j = new Audio('jump.mp3');
+  j.volume = 0.25;
+  j.play().catch(()=>{});
+}
+function playDeathSound() {
+  const d = new Audio('death.mp3');
+  d.volume = 0.6;
+  d.play().catch(()=>{});
+}
+
+/* ===== COUNTER ===== */
+function renderCounter(containerId, votes) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!votes) {
+    el.innerHTML = `<div class="vote-counter"><div class="counter-loading">⏳ Загрузка голосов...</div></div>`;
+    return;
+  }
+  const { yes, no } = votes;
+  const total = yes + no || 1;
+  const yp = yes + no > 0 ? Math.round(yes/total*100) : 0;
+  const np = 100 - yp;
+  el.innerHTML = `
+    <div class="vote-counter">
+      <div class="vote-counter-title">📊 РЕЗУЛЬТАТЫ ГОЛОСОВАНИЯ:</div>
+      <div class="vote-bar-row">
+        <span class="vote-bar-label yes">ДА</span>
+        <div class="vote-bar-track"><div class="vote-bar-fill yes" style="width:${yp}%"></div></div>
+        <span class="vote-bar-count">${yes} (${yp}%)</span>
+      </div>
+      <div class="vote-bar-row">
+        <span class="vote-bar-label no">НЕТ</span>
+        <div class="vote-bar-track"><div class="vote-bar-fill no" style="width:${np}%"></div></div>
+        <span class="vote-bar-count">${no} (${np}%)</span>
+      </div>
+    </div>`;
+}
+
+/* ===== INIT ===== */
+const KEY = 'plusvibeee_voted_v6';
+const voted = localStorage.getItem(KEY);
+const voteArea = document.getElementById('voteArea');
+
+if (voted) {
+  voteArea.innerHTML = `
+    <div class="voted-screen">
+      <div class="icon">🔒</div>
+      <div class="msg">Твой голос уже в системе.<br>Решение не изменить!</div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
+      <button class="minigame-btn" onclick="openGame()">
+        <img src="1.jpg" alt="lesha">
+        🎮 ФЛЭППИ
+      </button>
+      <button class="minigame-btn" onclick="openGuess()" style="background:linear-gradient(180deg,#c62828 0%,#8b1a1a 100%);border-color:#ef5350;">
+        <img src="оригинал.jpg" alt="guess">
+        🔍 ОРИГИНАЛ?
+      </button>
+    </div>
+    <div id="counterArea"><div class="vote-counter"><div class="counter-loading">⏳ Загрузка голосов...</div></div></div>`;
+  fetchVotes().then(v => renderCounter('counterArea', v));
+} else {
+  voteArea.innerHTML = `
+    <div class="voters-label">👥 Уже проголосовали:</div>
+    <div class="voters">
+      <div class="voter"><img src="face1.jpg" alt="1" onclick="playFaceSound(1)"><span>Игрок_1337</span></div>
+      <div class="voter"><img src="face2.jpg" alt="2" onclick="playFaceSound(2)"><span>xX_Pro_Xx</span></div>
+      <div class="voter"><img src="face3.jpg" alt="3" onclick="playFaceSound(3)"><span>Diamond_Guy</span></div>
+    </div>
+    <div class="buttons">
+      <div>
+        <button class="mc-btn btn-yes" id="btnYes" onclick="voteYes()">
+          <span class="btn-top">✔ ДА</span>
+          <span class="btn-shadow"></span>
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <button class="mc-btn btn-no" onclick="clickNo()">
+          <span class="btn-top">✘ НЕТ</span>
+          <span class="btn-shadow"></span>
+        </button>
+        <div class="no-tip" id="noTip"></div>
+      </div>
+    </div>
+    <div id="counterArea"><div class="vote-counter"><div class="counter-loading">⏳ Загрузка голосов...</div></div></div>`;
+  fetchVotes().then(v => renderCounter('counterArea', v));
+}
+
+function playFaceSound(n) { playSound('audioSound' + n); }
+
+async function voteYes() {
+  const btn = document.getElementById('btnYes');
+  if (btn) { btn.disabled = true; btn.classList.add('exploding'); }
+  playSound('audioYes');
+  spawnExplosion();
+  localStorage.setItem(KEY, 'yes');
+
+  // Показываем сразу после взрыва — не ждём сеть
+  setTimeout(() => {
+    playSound('audioWin');
+    document.getElementById('resultOverlay').classList.add('show');
+    voteArea.innerHTML = `
+      <div class="voted-screen">
+        <div class="icon">🔒</div>
+        <div class="msg">Твой голос уже в системе.<br>Решение не изменить!</div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
+        <button class="minigame-btn" onclick="openGame()">
+          <img src="1.jpg" alt="lesha">
+          🎮 ФЛЭППИ
+        </button>
+        <button class="minigame-btn" onclick="openGuess()" style="background:linear-gradient(180deg,#c62828 0%,#8b1a1a 100%);border-color:#ef5350;">
+          <img src="оригинал.jpg" alt="guess">
+          🔍 ОРИГИНАЛ?
+        </button>
+      </div>
+      <div id="counterArea"><div class="vote-counter"><div class="counter-loading">⏳ Загрузка голосов...</div></div></div>`;
+    // API в фоне
+    addVote('yes').then(upd => { if (upd) renderCounter('counterArea', upd); });
+  }, 620);
+}
+
+function closeOverlay() {
+  stopAllSounds();
+  document.getElementById('resultOverlay').classList.remove('show');
+}
+
+function clickNo() {
+  const tip = document.getElementById('noTip');
+  if (!tip) return;
+  playSound('audioNo');
+  const msgs = ['Функция недоступна 😏','Нажми ДА! 👆','⛔ Не работает','Попробуй ДА!'];
+  tip.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+  setTimeout(() => { if(tip) tip.textContent=''; }, 1400);
+}
+
+function spawnExplosion() {
+  const btn = document.getElementById('btnYes');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  const colors = ['#7ec850','#8bc34a','#ffd700','#fff','#558b2f','#aed581'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'exp-particle';
+    const angle = (i/28)*Math.PI*2 + (Math.random()-.5)*.6;
+    const dist  = 80 + Math.random()*180;
+    const size  = 6 + Math.floor(Math.random()*5)*2;
+    p.style.cssText = `left:${cx-size/2}px;top:${cy-size/2}px;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};--dx:${Math.cos(angle)*dist}px;--dy:${Math.sin(angle)*dist}px;animation-duration:${0.4+Math.random()*.3}s;`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+}
+
+/* ===================================================
+   FLAPPY BIRD — lesha edition
+   =================================================== */
+const CANVAS_W = 360;
+const CANVAS_H = 480;
+const GRAVITY  = 0.22;
+const JUMP_V   = -5.8;
+const PIPE_W   = 48;
+const PIPE_GAP = 190;
+const PIPE_SPD = 1.4;
+
+let gameRunning = false;
+let gameStarted = false;
+let animFrame   = null;
+let gameOverTime = 0;
+
+let bird, pipes, score, bestScore, frameCount;
+let birdImg = new Image();
+birdImg.src = '1.jpg';
+let bgImg = new Image();
+bgImg.src = '322.jpg';
+
+// Неуязвимость первые N кадров после старта — чтобы не умереть сразу
+let invincibleFrames = 0;
+
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');
+const scoreEl = document.getElementById('scoreDisplay');
+const bestEl  = document.getElementById('bestDisplay');
+
+bestScore = parseInt(localStorage.getItem('flappy_best') || '0');
+bestEl.textContent = bestScore;
+
+function initGame() {
+  bird = { x: 80, y: CANVAS_H/2, vy: 0, w: 46, h: 46, rot: 0 };
+  pipes = [];
+  score = 0;
+  frameCount = 0;
+  gameStarted = false;
+  invincibleFrames = 140;
+  scoreEl.textContent = '0';
+}
+
+let lastJumpSoundTime = 0;
+
+function playGameSound(id) {
+  const src = document.getElementById(id);
+  if (!src) return;
+  const clone = src.cloneNode();
+  clone.volume = 0.7;
+  clone.play().catch(()=>{});
+  clone.onended = () => clone.remove();
+  document.body.appendChild(clone);
+}
+
+function jump() {
+  if (!gameRunning || gameOver) return;
+  if (!gameStarted) gameStarted = true;
+  bird.vy = JUMP_V;
+  playJumpSound();
+}
+
+function spawnPipe() {
+  const minY = 60, maxY = CANVAS_H - PIPE_GAP - 60;
+  const topH = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+  pipes.push({ x: CANVAS_W, topH, passed: false });
+}
+
+function drawBg() {
+  // Background image, fallback to gradient
+  if (bgImg.complete && bgImg.naturalWidth > 0) {
+    ctx.drawImage(bgImg, 0, 0, CANVAS_W, CANVAS_H);
+    // Dark overlay so pipes/bird are visible
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  } else {
+    const sky = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    sky.addColorStop(0, '#0a1a00');
+    sky.addColorStop(1, '#1a2e0a');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }
+
+  // Ground strip
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0, CANVAS_H - 30, CANVAS_W, 30);
+  ctx.fillStyle = '#4a7a28';
+  ctx.fillRect(0, CANVAS_H - 30, CANVAS_W, 3);
+
+  // Pixel scanlines subtle
+  ctx.fillStyle = 'rgba(0,0,0,0.04)';
+  for (let y = 0; y < CANVAS_H; y += 3) {
+    ctx.fillRect(0, y, CANVAS_W, 1);
+  }
+}
+
+function drawPipe(pipe) {
+  const x = pipe.x;
+  const topH = pipe.topH;
+  const botY = topH + PIPE_GAP;
+  const botH = CANVAS_H - 30 - botY;
+
+  // Top pipe
+  ctx.fillStyle = '#2d8a0f';
+  ctx.fillRect(x, 0, PIPE_W, topH - 12);
+  // Cap top
+  ctx.fillStyle = '#4aaa28';
+  ctx.fillRect(x - 5, topH - 22, PIPE_W + 10, 20);
+  ctx.fillStyle = '#1a5a07';
+  ctx.fillRect(x - 5, topH - 22, PIPE_W + 10, 3);
+  ctx.fillRect(x - 5, topH - 2, PIPE_W + 10, 2);
+  // Highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(x + 4, 0, 6, topH - 12);
+
+  // Bottom pipe
+  ctx.fillStyle = '#2d8a0f';
+  ctx.fillRect(x, botY + 12, PIPE_W, botH);
+  // Cap bottom
+  ctx.fillStyle = '#4aaa28';
+  ctx.fillRect(x - 5, botY + 2, PIPE_W + 10, 20);
+  ctx.fillStyle = '#1a5a07';
+  ctx.fillRect(x - 5, botY + 2, PIPE_W + 10, 2);
+  ctx.fillRect(x - 5, botY + 20, PIPE_W + 10, 2);
+  // Highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(x + 4, botY + 12, 6, botH);
+}
+
+function drawBird() {
+  ctx.save();
+  ctx.translate(bird.x + bird.w/2, bird.y + bird.h/2);
+
+  // Smooth rotation
+  const targetRot = Math.max(-0.45, Math.min(1.1, bird.vy * 0.055));
+  bird.rot += (targetRot - bird.rot) * 0.18;
+  ctx.rotate(bird.rot);
+
+  const r = bird.w / 2; // 20px
+
+  // --- Bird silhouette path ---
+  // Body = main ellipse-ish shape
+  // Tail sticks out to the left, beak to the right
+  ctx.save();
+  ctx.beginPath();
+
+  // Body (rounded rect-ish, wider than tall)
+  // Start from beak tip going clockwise
+  // Beak (right pointy)
+  ctx.moveTo(r + 10, 2);           // beak tip
+  ctx.lineTo(r + 2, -5);           // beak top
+  ctx.lineTo(r - 2, -r + 4);       // top right of body
+  ctx.bezierCurveTo(0, -r - 4, -r + 2, -r + 2, -r + 2, 0); // top arc
+  // Tail (left, forked)
+  ctx.lineTo(-r - 6, -r + 8);      // tail top spike
+  ctx.lineTo(-r - 2, 0);           // tail middle dip
+  ctx.lineTo(-r - 6, r - 8);       // tail bottom spike
+  ctx.lineTo(-r + 2, r - 2);       // back to body bottom-left
+  ctx.bezierCurveTo(-r + 2, r + 2, 0, r + 3, r - 2, r - 4); // bottom arc
+  ctx.lineTo(r + 2, 5);            // beak bottom
+  ctx.closePath();
+
+  // Clip to bird shape and draw photo
+  ctx.clip();
+  if (birdImg.complete && birdImg.naturalWidth > 0) {
+    ctx.drawImage(birdImg, -r - 6, -r - 4, (r + 6)*2, (r + 4)*2);
+  } else {
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(-r - 6, -r - 4, (r + 6)*2, (r + 4)*2);
+  }
+  ctx.restore();
+
+  // --- Outline stroke (same path) ---
+  ctx.beginPath();
+  ctx.moveTo(r + 10, 2);
+  ctx.lineTo(r + 2, -5);
+  ctx.lineTo(r - 2, -r + 4);
+  ctx.bezierCurveTo(0, -r - 4, -r + 2, -r + 2, -r + 2, 0);
+  ctx.lineTo(-r - 6, -r + 8);
+  ctx.lineTo(-r - 2, 0);
+  ctx.lineTo(-r - 6, r - 8);
+  ctx.lineTo(-r + 2, r - 2);
+  ctx.bezierCurveTo(-r + 2, r + 2, 0, r + 3, r - 2, r - 4);
+  ctx.lineTo(r + 2, 5);
+  ctx.closePath();
+  ctx.strokeStyle = '#7ec850';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Eye (white + pupil)
+  ctx.beginPath();
+  ctx.arc(r - 8, -4, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(r - 7, -4, 2.5, 0, Math.PI*2);
+  ctx.fillStyle = '#111';
+  ctx.fill();
+
+  // Glow on jump
+  if (bird.vy < -3) {
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 7, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(126,200,80,0.35)';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawScore() {
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(10, 10, 120, 28);
+  ctx.fillStyle = '#7ec850';
+  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.fillText('СЧЁТ: ' + score, 16, 29);
+}
+
+function drawStartScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(CANVAS_W/2 - 130, CANVAS_H/2 - 46, 260, 92);
+  ctx.strokeStyle = '#7ec850';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(CANVAS_W/2 - 130, CANVAS_H/2 - 46, 260, 92);
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '11px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('FLAPPY lesha', CANVAS_W/2, CANVAS_H/2 - 18);
+  ctx.fillStyle = '#7ec850';
+  ctx.font = '8px "Press Start 2P", monospace';
+  ctx.fillText('ПРОБЕЛ / ТАП', CANVAS_W/2, CANVAS_H/2 + 8);
+  ctx.fillText('чтобы начать!', CANVAS_W/2, CANVAS_H/2 + 26);
+  ctx.textAlign = 'left';
+}
+
+function drawGameOver() {
+  ctx.fillStyle = 'rgba(0,0,0,0.82)';
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  const bw = 300, bh = 160;
+  const bx = CANVAS_W/2 - bw/2, by = CANVAS_H/2 - bh/2 - 30;
+  ctx.fillStyle = 'rgba(20,5,5,0.98)';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = '#ef5350';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(bx, by, bw, bh);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ef5350';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.fillText('GAME OVER', CANVAS_W/2, by + 46);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '9px "Press Start 2P", monospace';
+  ctx.fillText('СЧЁТ: ' + score, CANVAS_W/2, by + 76);
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText('РЕКОРД: ' + bestScore, CANVAS_W/2, by + 100);
+  ctx.textAlign = 'left';
+}
+
+function checkCollision() {
+  if (invincibleFrames > 0) return false;
+
+  // Generous hitbox — inner 50% of bird
+  const margin = bird.w * 0.28;
+  const bx = bird.x + margin;
+  const by = bird.y + margin;
+  const bw = bird.w - margin * 2;
+  const bh = bird.h - margin * 2;
+
+  // Ground / ceiling
+  if (bird.y + bird.h >= CANVAS_H - 30 || bird.y <= 0) return true;
+
+  for (const pipe of pipes) {
+    if (bx + bw > pipe.x + 6 && bx < pipe.x + PIPE_W - 6) {
+      if (by < pipe.topH - 8 || by + bh > pipe.topH + PIPE_GAP + 8) return true;
+    }
+  }
+  return false;
+}
+
+let gameOver = false;
+
+function gameLoop() {
+  drawBg();
+
+  if (!gameStarted) {
+    drawBird();
+    drawStartScreen();
+    animFrame = requestAnimationFrame(gameLoop);
+    return;
+  }
+
+  if (!gameOver) {
+    // Bird physics
+    bird.vy += GRAVITY;
+    bird.y  += bird.vy;
+    if (invincibleFrames > 0) invincibleFrames--;
+
+    // Spawn pipes
+    frameCount++;
+    if (frameCount % 130 === 0 && frameCount > 80) spawnPipe();
+
+    // Move pipes
+    for (const pipe of pipes) {
+      pipe.x -= PIPE_SPD;
+      if (!pipe.passed && pipe.x + PIPE_W < bird.x) {
+        pipe.passed = true;
+        score++;
+        scoreEl.textContent = score;
+      }
+    }
+    pipes = pipes.filter(p => p.x + PIPE_W > 0);
+
+    if (checkCollision()) {
+      gameOver = true;
+      gameOverTime = Date.now();
+      playDeathSound();
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('flappy_best', bestScore);
+        bestEl.textContent = bestScore;
+      }
+      // Show restart button after short delay
+      setTimeout(() => {
+        const btn = document.getElementById('restartBtn');
+        if (btn) btn.style.display = 'block';
+      }, 800);
+    }
+  }
+
+  pipes.forEach(drawPipe);
+  drawBird();
+  drawScore();
+
+  if (gameOver) {
+    drawGameOver();
+  }
+
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+function doRestart() {
+  const btn = document.getElementById('restartBtn');
+  if (btn) btn.style.display = 'none';
+  gameOver = false;
+  gameOverTime = 0;
+  initGame();
+  gameStarted = true;
+}
+
+function openGame() {
+  document.getElementById('gameOverlay').classList.add('show');
+  const btn = document.getElementById('restartBtn');
+  if (btn) btn.style.display = 'none';
+  gameRunning = true;
+  gameOver    = false;
+  initGame();
+  if (animFrame) cancelAnimationFrame(animFrame);
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+function closeGame() {
+  document.getElementById('gameOverlay').classList.remove('show');
+  const btn = document.getElementById('restartBtn');
+  if (btn) btn.style.display = 'none';
+  gameRunning = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+}
+
+function tryRestart() {
+  if (!gameRunning) return;
+  if (!gameOver) jump();
+}
+
+// Controls
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.key === ' ') {
+    e.preventDefault();
+    tryRestart();
+  }
+});
+
+canvas.addEventListener('click', () => { tryRestart(); });
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  tryRestart();
+}, { passive: false });
+
+/* ===== УГАДАЙ ОРИГИНАЛ ===== */
+const GUESS_ROUNDS = [
+  { orig: 'оригинал.jpg',  fake: 'неоригинал.jpg'  },
+  { orig: 'оригинал1.jpg', fake: 'неоригинал1.jpg' },
+  { orig: 'оригинал2.jpg', fake: 'неоригинал2.jpg' },
+];
+
+let guessScore    = 0;
+let guessBest     = parseInt(localStorage.getItem('guess_best') || '0');
+let guessRoundIdx = 0;
+let guessAnswered  = false;
+// Перемешанный порядок раундов
+let guessOrder    = [];
+
+function openGuess() {
+  document.getElementById('guessOverlay').classList.add('show');
+  guessScore    = 0;
+  guessRoundIdx = 0;
+  guessOrder    = [...GUESS_ROUNDS].sort(() => Math.random() - 0.5);
+  document.getElementById('guessScore').textContent = 0;
+  document.getElementById('guessBest').textContent  = guessBest;
+  guessShowRound();
+}
+
+function closeGuess() {
+  document.getElementById('guessOverlay').classList.remove('show');
+}
+
+function guessShowRound() {
+  if (guessRoundIdx >= guessOrder.length) {
+    // Все раунды пройдены — победа!
+    guessEndScreen(true);
+    return;
+  }
+  guessAnswered = false;
+  const round = guessOrder[guessRoundIdx];
+
+  // Рандомно меняем порядок картинок
+  const pics = Math.random() > 0.5
+    ? [{ src: round.orig, isOrig: true  }, { src: round.fake, isOrig: false }]
+    : [{ src: round.fake, isOrig: false }, { src: round.orig, isOrig: true  }];
+
+  document.getElementById('guessQuestion').textContent = `Раунд ${guessRoundIdx + 1} из ${guessOrder.length} — найди оригинал!`;
+  document.getElementById('guessResult').textContent   = '';
+  document.getElementById('guessResult').style.color   = '';
+  document.getElementById('guessNextBtn').style.display = 'none';
+
+  const picsEl = document.getElementById('guessPics');
+  picsEl.innerHTML = '';
+  pics.forEach(pic => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'cursor:pointer;border:4px solid #333;box-shadow:3px 3px 0 #000;transition:transform 0.1s,border-color 0.15s;flex:1;min-width:130px;max-width:200px;';
+    const img = document.createElement('img');
+    img.src = pic.src;
+    img.style.cssText = 'width:100%;height:160px;object-fit:cover;object-position:top;display:block;';
+    wrap.appendChild(img);
+    wrap.addEventListener('click', () => guessAnswer(pic.isOrig, wrap, pics, picsEl));
+    picsEl.appendChild(wrap);
+  });
+}
+
+function guessAnswer(isCorrect, clickedWrap, pics, picsEl) {
+  if (guessAnswered) return;
+  guessAnswered = true;
+
+  const resultEl = document.getElementById('guessResult');
+  const nextBtn  = document.getElementById('guessNextBtn');
+
+  // Подсветить правильный и неправильный
+  const wraps = picsEl.children;
+  Array.from(wraps).forEach((w, i) => {
+    if (pics[i].isOrig) {
+      w.style.borderColor = '#7ec850';
+      w.style.boxShadow   = '0 0 0 2px #000, 0 0 16px rgba(126,200,80,0.5)';
+    } else {
+      w.style.borderColor = '#ef5350';
+      w.style.opacity     = '0.6';
+    }
+    w.style.cursor = 'default';
+  });
+
+  if (isCorrect) {
+    guessScore++;
+    document.getElementById('guessScore').textContent = guessScore;
+    resultEl.textContent = '✔ ПРАВИЛЬНО! ты знаешь plusvibeee 👀';
+    resultEl.style.color = '#7ec850';
+    guessRoundIdx++;
+    nextBtn.style.display = 'inline-block';
+  } else {
+    resultEl.textContent = '✘ НЕПРАВИЛЬНО! ты лох 😂';
+    resultEl.style.color = '#ef5350';
+    // Играем звук "ты лох"
+    const loh = document.getElementById('audioLoh');
+    if (loh) { loh.currentTime = 0; loh.volume = 0.8; loh.play().catch(()=>{}); }
+    // Сброс после паузы — начать заново
+    setTimeout(() => {
+      guessEndScreen(false);
+    }, 2000);
+  }
+}
+
+function guessNext() {
+  guessShowRound();
+}
+
+function guessEndScreen(win) {
+  // Обновить рекорд
+  if (guessScore > guessBest) {
+    guessBest = guessScore;
+    localStorage.setItem('guess_best', guessBest);
+    document.getElementById('guessBest').textContent = guessBest;
+  }
+
+  const picsEl   = document.getElementById('guessPics');
+  const resultEl = document.getElementById('guessResult');
+  const nextBtn  = document.getElementById('guessNextBtn');
+  const qEl      = document.getElementById('guessQuestion');
+
+  picsEl.innerHTML = '';
+
+  if (win) {
+    qEl.textContent      = '🏆 ТЫ ЗНАЕШЬ plusvibeee ЛУЧШЕ ВСЕХ!';
+    resultEl.textContent = `Счёт: ${guessScore} из ${GUESS_ROUNDS.length}`;
+    resultEl.style.color = '#ffd700';
+  } else {
+    qEl.textContent      = '😂 ТЫ ЛОХ — не знаешь plusvibeee!';
+    resultEl.textContent = `Угадал: ${guessScore} из ${GUESS_ROUNDS.length}`;
+    resultEl.style.color = '#ef5350';
+  }
+
+  nextBtn.textContent       = '🔄 ИГРАТЬ ЗАНОВО';
+  nextBtn.style.display     = 'inline-block';
+  nextBtn.onclick           = () => {
+    guessScore    = 0;
+    guessRoundIdx = 0;
+    guessOrder    = [...GUESS_ROUNDS].sort(() => Math.random() - 0.5);
+    document.getElementById('guessScore').textContent = 0;
+    guessShowRound();
+    nextBtn.textContent = '▶ СЛЕДУЮЩИЙ';
+    nextBtn.onclick     = guessNext;
+  };
+}
+
+
+function openDemoPopup() {
+  document.getElementById('demoPopup').classList.add('show');
+}
+function closeDemoPopup() {
+  document.getElementById('demoPopup').classList.remove('show');
+}
+function resetVote() {
+  localStorage.removeItem(KEY);
+  closeDemoPopup();
+  // Re-render vote area
+  location.reload();
+}
+
+</script>
+</body>
+</html>
