@@ -466,7 +466,6 @@
 <audio id="audioSound2" src="sound2.mp3" preload="auto"></audio>
 <audio id="audioSound3" src="sound3.mp3" preload="auto"></audio>
 <audio id="audioJump"   src="jump.mp3"   preload="auto"></audio>
-<audio id="audioDeath"  src="death.mp3"  preload="auto"></audio>
 
 <script>
 /* ===== JSONBIN ===== */
@@ -508,10 +507,7 @@ for (let i = 0; i < 28; i++) {
 
 /* ===== SOUND MANAGER ===== */
 let currentAudio = null;
-const GAME_SOUNDS = ['audioJump', 'audioDeath']; // эти звуки вне менеджера
-
 function playSound(id) {
-  if (GAME_SOUNDS.includes(id)) return; // игровые звуки управляются отдельно
   if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
   const a = document.getElementById(id);
   if (!a) return;
@@ -521,19 +517,6 @@ function playSound(id) {
 }
 function stopAllSounds() {
   if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
-}
-
-/* Звуки игры — независимые, не мешают основному менеджеру */
-function playJumpSound() {
-  // Создаём новый объект каждый раз — 100% независим от всего
-  const j = new Audio('jump.mp3');
-  j.volume = 0.25;
-  j.play().catch(()=>{});
-}
-function playDeathSound() {
-  const d = new Audio('death.mp3');
-  d.volume = 0.6;
-  d.play().catch(()=>{});
 }
 
 /* ===== COUNTER ===== */
@@ -565,7 +548,7 @@ function renderCounter(containerId, votes) {
 }
 
 /* ===== INIT ===== */
-const KEY = 'plusvibeee_voted_v5';
+const KEY = 'plusvibeee_voted_v4';
 const voted = localStorage.getItem(KEY);
 const voteArea = document.getElementById('voteArea');
 
@@ -715,23 +698,13 @@ function initGame() {
   scoreEl.textContent = '0';
 }
 
-let lastJumpSoundTime = 0;
-
-function playGameSound(id) {
-  const src = document.getElementById(id);
-  if (!src) return;
-  const clone = src.cloneNode();
-  clone.volume = 0.7;
-  clone.play().catch(()=>{});
-  clone.onended = () => clone.remove();
-  document.body.appendChild(clone);
-}
-
 function jump() {
   if (!gameRunning) return;
   if (!gameStarted) gameStarted = true;
   bird.vy = JUMP_V;
-  playJumpSound();
+  // Jump sound plays independently — doesn't interrupt other sounds
+  const j = document.getElementById('audioJump');
+  if (j) { j.currentTime = 0; j.play().catch(()=>{}); }
 }
 
 function spawnPipe() {
@@ -990,7 +963,6 @@ function gameLoop() {
     if (checkCollision()) {
       gameOver = true;
       gameOverTime = Date.now();
-      playDeathSound();
       if (score > bestScore) {
         bestScore = score;
         localStorage.setItem('flappy_best', bestScore);
